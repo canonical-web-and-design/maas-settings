@@ -10,6 +10,7 @@ declare global {
   namespace Cypress {
     interface Chainable {
       addMachine(hostname?: string): void;
+      addMachineCLI(hostname?: string, macAddress?: string): void;
       addMachines(hostname: string[]): void;
       deleteMachine(hostname: string): void;
       deletePool(pool: string): void;

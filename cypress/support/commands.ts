@@ -37,18 +37,16 @@ Cypress.Commands.add("loginNonAdmin", () => {
   });
 });
 
-Cypress.Commands.add("addMachine", (hostname = generateName()) => {
-  cy.visit(generateMAASURL("/machines"));
-  cy.findByRole("button", { name: "Add hardware" }).click();
-  cy.get(".p-contextual-menu__link").contains("Machine").click();
-  cy.get("input[name='hostname']").type(hostname);
-  cy.get("input[name='pxe_mac']").type(generateMac());
-  cy.get("select[name='power_type']").select("manual").blur();
-  cy.findByRole("button", { name: /save machine/i }).click();
-  cy.get(`[data-testid='message']:contains(${hostname} added successfully.)`, {
-    timeout: LONG_TIMEOUT,
-  });
-});
+Cypress.Commands.add(
+  "addMachine",
+  (hostname = generateName(), macAddress = generateMac()) => {
+    const powerType = "manual";
+    const maasCLICommand = `maas admin machines create hostname=${hostname} mac_addresses=${macAddress} power_type=${powerType}`;
+    cy.exec(maasCLICommand).then((result) => {
+      expect(result.code).to.eq(0);
+    });
+  }
+);
 
 Cypress.Commands.add("deleteMachine", (hostname: string) => {
   cy.visit(generateMAASURL("/machines"));
