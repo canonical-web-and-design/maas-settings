@@ -121,7 +121,7 @@
     "colors": "1.4.0",
     "concurrently": "8.0.1",
     "cooky-cutter": "1.5.4",
-    "cypress": "13.1.0",
+    "cypress": "13.6.4",
     "cypress-axe": "1.4.0",
     "cypress-wait-until": "3.0.1",
     "dotenv-flow": "3.2.0",
