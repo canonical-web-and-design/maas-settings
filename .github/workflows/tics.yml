@@ -1,0 +1,31 @@
+name: TICS Report
+
+on:
+  push:
+    branches:
+      - main
+      - ci-add-tics-workflow
+
+jobs:
+  tics-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run TICS Analyzer
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: qserver
+          project: maas-ui
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=config
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+          tmpdir: /tmp/tics
+          branchdir: .
+
+      - name: Upload TICS Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tics-report
+          path: /tmp/tics/ticstmpdir
+          retention-days: 7
