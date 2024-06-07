@@ -7,8 +7,64 @@ on:
       - ci-add-tics-workflow
 
 jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests with coverage
+        run: |
+          set -x
+          yarn test:coverage
+          zip -r coverage/coverage-report.zip coverage/
+          # Clean up any unwanted directories if necessary
+          find . -type d -name "unwanted-dir" -exec rm -r {} +
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/coverage-report.zip
+          retention-days: 1
+
+  publish-coverage-report:
+    runs-on: ubuntu-latest
+    needs: test-coverage
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: coverage
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
   tics-report:
     runs-on: ubuntu-latest
+    needs: publish-coverage-report
     steps:
       - uses: actions/checkout@v4
       - name: Run TICS Analyzer
