@@ -4,51 +4,21 @@ on:
   push:
     branches:
       - main
-      - ci-add-tics-workflow
+      - ci-test-coverage-publish
 
 jobs:
-  test-coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - name: Install dependencies
-        run: yarn install
-
-      - name: Run tests with coverage
-        run: |
-          set -x
-          yarn test:coverage
-          zip -r coverage/coverage-report.zip coverage/
-          # Clean up any unwanted directories if necessary
-          find . -type d -name "unwanted-dir" -exec rm -r {} +
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage/coverage-report.zip
-          retention-days: 1
-
   publish-coverage-report:
     runs-on: ubuntu-latest
-    needs: test-coverage
     permissions:
       id-token: write
+      pages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download coverage report
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage
+      - name: Download coverage report from external URL
+        run: |
+          curl -L -o coverage-report.zip "https://assets.ubuntu.com/v1/565c62a9-coverage.zip"
+          unzip -o coverage-report.zip -d coverage
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -61,27 +31,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-  tics-report:
-    runs-on: ubuntu-latest
-    needs: publish-coverage-report
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run TICS Analyzer
-        uses: tiobe/tics-github-action@v3
-        with:
-          mode: qserver
-          project: maas-ui
-          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=config
-          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-          installTics: true
-          tmpdir: /tmp/tics
-          branchdir: .
-
-      - name: Upload TICS Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tics-report
-          path: /tmp/tics/ticstmpdir
-          retention-days: 7
